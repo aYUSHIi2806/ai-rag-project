@@ -1,6 +1,9 @@
 import streamlit as st
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
+from sumy.parsers.plaintext import PlaintextParser
+from sumy.nlp.tokenizers import Tokenizer
+from sumy.summarizers.lsa import LsaSummarizer
 
 st.title("📄 Ask Questions About Your Document")
 
@@ -23,7 +26,12 @@ if st.button("Ask"):
         q = question.lower()
 
         if "summary" in q or "summarize" in q:
-            answer = document_text[:500]
+            parser = PlaintextParser.from_string(
+                document_text, Tokenizer("english")
+            )
+            summarizer = LsaSummarizer()
+            summary_sentences = summarizer(parser.document, 5)
+            answer = " ".join(str(sentence) for sentence in summary_sentences)
         else:
             # TF-IDF aur chunking logic
             chunks = [s.strip() for s in document_text.split('.') if len(s.strip()) > 10]
