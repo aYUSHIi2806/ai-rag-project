@@ -1,4 +1,6 @@
 import streamlit as st
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 st.title("📄 Ask Questions About Your Document")
 
@@ -23,8 +25,16 @@ if st.button("Ask"):
         if "summary" in q or "summarize" in q:
             answer = document_text[:500]
         else:
-            if q in document_text.lower():
-                answer = "Found in document:\n\n" + document_text[:500]
+            # TF-IDF aur chunking logic
+            chunks = [s.strip() for s in document_text.split('.') if len(s.strip()) > 10]
+
+            if chunks and question:
+                vectorizer = TfidfVectorizer()
+                X = vectorizer.fit_transform(chunks + [question])
+                sim_scores = cosine_similarity(X[-1], X[:-1])
+                best_idx = sim_scores.argmax()
+                
+                answer = f"Most relevant chunk found:\n\n{chunks[best_idx]}"
             else:
                 answer = "Sorry, I couldn't find a relevant answer."
 
